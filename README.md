@@ -330,7 +330,27 @@ Public live scorecard broadcast stream:
 
 ---
 
-## 8. Requirements Verification Matrix
+## 8. Automated End-to-End Verification Suites
+
+The repository contains two fully automated test suites that verify the entire pipeline live against MongoDB Atlas:
+
+### 1. Comprehensive System E2E Suite (22 Assertions)
+Tests all REST APIs, authentication, field filters, live match telemetry, raw WebSocket connectivity, admin mutations, change stream dispatch, and bulk read operations:
+```bash
+cd backend
+npm run test:e2e
+```
+
+### 2. Change Stream & Raw Oplog Verification Suite (7 Assertions)
+Demonstrates Requirement #7 by directly writing to the MongoDB Atlas oplog via native driver (completely bypassing the NestJS API) and verifying WebSocket reception:
+```bash
+cd backend
+npm run test:verify
+```
+
+---
+
+## 9. Requirements Verification Matrix
 
 | # | Requirement | Implementation Summary | Status |
 |---|---|---|:---:|

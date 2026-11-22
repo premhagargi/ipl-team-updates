@@ -10,7 +10,8 @@
     "seed": "ts-node scripts/seed-teams.ts",
     "simulate": "ts-node scripts/simulate-match.ts",
     "test:direct-update": "ts-node scripts/test-direct-mongo-update.ts",
-    "test:verify": "ts-node scripts/verify-change-streams.ts"
+    "test:verify": "ts-node scripts/verify-change-streams.ts",
+    "test:e2e": "ts-node scripts/test-all-endpoints.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.4",
