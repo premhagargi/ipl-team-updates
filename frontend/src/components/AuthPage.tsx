@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { AlertTriangle, X } from 'lucide-react';
 
 export const AuthPage: React.FC = () => {
-  const { login, register } = useAuth();
+  const { login, register, sessionAlert, clearSessionAlert } = useAuth();
   const [isLoginTab, setIsLoginTab] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -40,7 +41,28 @@ export const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-4">
+      {/* Top Banner Alert if Session Expired */}
+      {sessionAlert && (
+        <aside
+          aria-label="Session Alert Banner"
+          className="w-full max-w-md mb-4 bg-amber-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-md flex items-center justify-between"
+        >
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="w-4 h-4 text-white flex-shrink-0" />
+            <span>Session expired (401). Please sign in to continue.</span>
+          </div>
+          <button
+            type="button"
+            onClick={clearSessionAlert}
+            className="text-white/80 hover:text-white p-0.5 rounded transition"
+            aria-label="Dismiss top notification"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </aside>
+      )}
+
       <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200/90 shadow-xl p-6 sm:p-8">
         {/* Header */}
         <div className="text-center mb-6">
@@ -54,6 +76,29 @@ export const AuthPage: React.FC = () => {
             Real-time notifications driven by MongoDB Change Streams
           </p>
         </div>
+
+        {/* Detailed Session Expired Alert Box */}
+        {sessionAlert && (
+          <div className="mb-5 p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-sans flex items-start justify-between shadow-sm animate-in fade-in duration-200">
+            <div className="flex items-start space-x-2.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="font-bold text-amber-950 uppercase tracking-wider text-[11px]">
+                  Session Expired (401)
+                </div>
+                <div className="text-amber-800 mt-0.5 leading-relaxed">{sessionAlert}</div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={clearSessionAlert}
+              className="text-amber-500 hover:text-amber-800 p-0.5 rounded transition flex-shrink-0 ml-2"
+              title="Dismiss alert"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex border-b border-slate-200 mb-5">

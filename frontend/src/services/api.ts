@@ -7,6 +7,29 @@ function getAuthHeader(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+export function notifyUnauthorized(message = 'Session expired or unauthorized (401). Please sign in again.') {
+  localStorage.removeItem('ipl_token');
+  localStorage.removeItem('ipl_user');
+  sessionStorage.setItem('ipl_session_alert', message);
+  window.dispatchEvent(
+    new CustomEvent('auth:unauthorized', {
+      detail: { message },
+    })
+  );
+}
+
+async function authFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const headers = {
+    ...getAuthHeader(),
+    ...(options.headers || {}),
+  };
+  const res = await fetch(url, { ...options, headers });
+  if (res.status === 401) {
+    notifyUnauthorized();
+  }
+  return res;
+}
+
 export const api = {
   // Auth
   async register(username: string, password: string, role = 'user') {
@@ -37,10 +60,9 @@ export const api = {
 
   // Teams
   async getTeams(): Promise<Team[]> {
-    const res = await fetch(`${API_BASE}/teams`, {
+    const res = await authFetch(`${API_BASE}/teams`, {
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeader(),
       },
     });
     if (!res.ok) throw new Error('Failed to fetch teams');
@@ -48,10 +70,9 @@ export const api = {
   },
 
   async getTeam(id: string): Promise<Team> {
-    const res = await fetch(`${API_BASE}/teams/${id}`, {
+    const res = await authFetch(`${API_BASE}/teams/${id}`, {
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeader(),
       },
     });
     if (!res.ok) throw new Error('Failed to fetch team');
@@ -59,11 +80,10 @@ export const api = {
   },
 
   async subscribeTeam(teamId: string, fields: 'ALL' | string[] = 'ALL') {
-    const res = await fetch(`${API_BASE}/teams/${teamId}/subscribe`, {
+    const res = await authFetch(`${API_BASE}/teams/${teamId}/subscribe`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeader(),
       },
       body: JSON.stringify({ fields }),
     });
@@ -72,11 +92,10 @@ export const api = {
   },
 
   async unsubscribeTeam(teamId: string) {
-    const res = await fetch(`${API_BASE}/teams/${teamId}/unsubscribe`, {
+    const res = await authFetch(`${API_BASE}/teams/${teamId}/unsubscribe`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeader(),
       },
     });
     if (!res.ok) throw new Error('Failed to unsubscribe from team');
@@ -84,11 +103,10 @@ export const api = {
   },
 
   async updateSubscription(teamId: string, fields: 'ALL' | string[]) {
-    const res = await fetch(`${API_BASE}/teams/${teamId}/subscription`, {
+    const res = await authFetch(`${API_BASE}/teams/${teamId}/subscription`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeader(),
       },
       body: JSON.stringify({ fields }),
     });
@@ -98,10 +116,9 @@ export const api = {
 
   // Notifications
   async getNotifications(): Promise<{ notifications: NotificationItem[]; unreadCount: number }> {
-    const res = await fetch(`${API_BASE}/notifications`, {
+    const res = await authFetch(`${API_BASE}/notifications`, {
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeader(),
       },
     });
     if (!res.ok) throw new Error('Failed to fetch notifications');
@@ -120,11 +137,10 @@ export const api = {
   },
 
   async markAllRead() {
-    const res = await fetch(`${API_BASE}/notifications/mark-all-read`, {
+    const res = await authFetch(`${API_BASE}/notifications/mark-all-read`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeader(),
       },
     });
     if (!res.ok) throw new Error('Failed to mark all as read');
@@ -133,11 +149,10 @@ export const api = {
 
   // Admin update (triggers Mongo Change Stream)
   async adminUpdateTeam(teamId: string, data: Partial<Team>) {
-    const res = await fetch(`${API_BASE}/admin/teams/${teamId}`, {
+    const res = await authFetch(`${API_BASE}/admin/teams/${teamId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeader(),
       },
       body: JSON.stringify(data),
     });

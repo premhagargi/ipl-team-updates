@@ -25,7 +25,7 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { token, user } = useAuth();
+  const { token, user, logout } = useAuth();
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [liveMatch, setLiveMatch] = useState<LiveMatch | null>(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -34,7 +34,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<any>(null);
 
-  // Fetch initial match immediately on mount (NO ENDLESS LOADING)
+  // Fetch initial match immediately on mount (prevents endless loading)
   useEffect(() => {
     api.getLiveMatch().then((match) => {
       if (match) setLiveMatch(match);
@@ -43,7 +43,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Fetch initial notifications on login/mount
   const refreshNotifications = useCallback(async () => {
-    if (!token) {
+    if (!token || !user) {
       setNotifications([]);
       setUnreadCount(0);
       return;
@@ -55,7 +55,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (err) {
       console.error('Failed to fetch initial notifications:', err);
     }
-  }, [token]);
+  }, [token, user]);
 
   useEffect(() => {
     refreshNotifications();
@@ -65,16 +65,25 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     let isCancelled = false;
 
+    // Do not attempt connection if unauthenticated
+    if (!token || !user) {
+      setIsConnected(false);
+      if (socketRef.current) {
+        socketRef.current.close();
+        socketRef.current = null;
+      }
+      return;
+    }
+
     const connectWebSocket = () => {
       if (isCancelled) return;
 
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      // In dev, backend runs on port 3000
       const wsHost =
         import.meta.env.VITE_WS_URL ||
         `${wsProtocol}//${window.location.hostname}:3000/ws`;
 
-      const wsUrl = token ? `${wsHost}?token=${encodeURIComponent(token)}` : wsHost;
+      const wsUrl = `${wsHost}?token=${encodeURIComponent(token)}`;
 
       console.log('Connecting raw WebSocket to:', wsUrl.replace(/token=([^&]+)/, 'token=***'));
       const ws = new WebSocket(wsUrl);
@@ -90,6 +99,17 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         if (isCancelled) return;
         try {
           const message = JSON.parse(event.data);
+
+          // Server-side auth rejection notification
+          if (message.type === 'auth_error') {
+            console.warn('⚠️ WS Auth error received:', message.message);
+            setIsConnected(false);
+            if (reconnectTimeoutRef.current) {
+              clearTimeout(reconnectTimeoutRef.current);
+            }
+            logout(message.message || 'Session expired or unauthorized (401). Please sign in again.');
+            return;
+          }
 
           if (message.type === 'connected') {
             console.log('WS Connection Acknowledged:', message.payload);
@@ -119,14 +139,30 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
       ws.onclose = (event) => {
         if (isCancelled) return;
-        console.warn(`WebSocket closed (code: ${event.code}). Reconnecting in 3s...`);
         setIsConnected(false);
+
+        // Check for 4001, 4401, 1008 or unauthorized / invalid token close codes
+        if (
+          event.code === 4001 ||
+          event.code === 4401 ||
+          event.code === 1008 ||
+          event.reason?.toLowerCase().includes('unauthorized') ||
+          event.reason?.toLowerCase().includes('invalid token')
+        ) {
+          console.warn(`WebSocket closed due to auth failure (code: ${event.code}, reason: "${event.reason}"). Halting reconnect and logging out.`);
+          if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
+          }
+          logout('Session expired or unauthorized (401). Please sign in again.');
+          return;
+        }
+
+        console.warn(`WebSocket closed (code: ${event.code}). Reconnecting in 3s...`);
         reconnectTimeoutRef.current = setTimeout(connectWebSocket, 3000);
       };
 
       ws.onerror = (err) => {
         console.warn('WebSocket error encountered:', err);
-        ws.close();
       };
     };
 
@@ -141,7 +177,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         socketRef.current.close();
       }
     };
-  }, [token, user]);
+  }, [token, user, logout]);
 
   const markAllAsRead = async () => {
     // Optimistic UI update
@@ -152,7 +188,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
       await api.markAllRead();
     } catch (err) {
       console.error('Failed to mark all as read:', err);
-      // Revert if error
       refreshNotifications();
     }
   };

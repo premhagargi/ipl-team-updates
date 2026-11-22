@@ -74,7 +74,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="text-[10px] text-slate-500 uppercase font-semibold">{user?.role}</div>
             </div>
             <button
-              onClick={logout}
+              onClick={() => logout()}
               className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition"
               title="Sign Out"
             >

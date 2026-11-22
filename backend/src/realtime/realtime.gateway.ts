@@ -29,7 +29,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     try {
       const fullUrl = `http://${req.headers.host || 'localhost'}${req.url || ''}`;
       const url = new URL(fullUrl);
-      const token = url.searchParams.get('token');
+      const rawToken = url.searchParams.get('token');
+      const token = rawToken && rawToken !== 'null' && rawToken !== 'undefined' ? rawToken : null;
 
       let userId: string | null = null;
       let username: string | null = null;
@@ -41,6 +42,16 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
           username = payload.username;
         } catch (authErr) {
           this.logger.warn(`Invalid JWT token on WS connection: ${authErr.message}`);
+          try {
+            client.send(
+              JSON.stringify({
+                type: 'auth_error',
+                message: 'Session expired or invalid token (401). Please sign in again.',
+              }),
+            );
+          } catch (e) {
+            // client already disconnected
+          }
           client.close(4001, 'Unauthorized: Invalid token');
           return;
         }
