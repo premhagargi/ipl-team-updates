@@ -1,10 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  * {
+    letter-spacing: -0.02em;
+  }
+
   body {
-    @apply bg-[#0b0f19] text-slate-100 antialiased selection:bg-blue-600 selection:text-white font-sans;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    letter-spacing: -0.02em;
+    @apply bg-[#0b0f19] text-slate-100 antialiased selection:bg-blue-600 selection:text-white;
   }
 }
 

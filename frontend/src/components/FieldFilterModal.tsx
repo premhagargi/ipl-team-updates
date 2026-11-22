@@ -92,7 +92,7 @@ export const FieldFilterModal: React.FC<FieldFilterModalProps> = ({
                 </span>
               </h3>
               <p className="text-xs text-slate-400">
-                Choose exactly which changes trigger real-time notifications (Req #10)
+                Choose exactly which changes trigger real-time notifications
               </p>
             </div>
           </div>

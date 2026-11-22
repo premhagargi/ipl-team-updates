@@ -95,10 +95,10 @@ export const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Requirement #9: Live Match Scorecard (raw WebSocket stream) */}
+        {/* Live Match Scorecard Stream */}
         <LiveScorecard />
 
-        {/* Requirement #3 & #4: My Subscribed Teams */}
+        {/* My Subscribed Teams */}
         <MyTeamsGrid
           teams={teams}
           onManageFields={handleOpenFieldModal}
@@ -108,7 +108,7 @@ export const App: React.FC = () => {
         {/* Statistical Insights & Charts */}
         <StatsCharts teams={teams} />
 
-        {/* Requirement #2: All 10 IPL Franchises */}
+        {/* All 10 IPL Franchises */}
         <DiscoverTeams
           teams={teams}
           onSubscribe={handleSubscribe}
@@ -117,13 +117,13 @@ export const App: React.FC = () => {
         />
       </main>
 
-      {/* Slide-out Notifications Panel (Req #4, #5, #6, #8) */}
+      {/* Slide-out Notifications Panel */}
       <NotificationsPanel
         isOpen={isNotificationsOpen}
         onClose={() => setIsNotificationsOpen(false)}
       />
 
-      {/* Field-level Subscription Filter Modal (Req #10) */}
+      {/* Field-level Subscription Filter Modal */}
       <FieldFilterModal
         team={selectedTeamForFields}
         isOpen={isFieldModalOpen}
@@ -131,7 +131,7 @@ export const App: React.FC = () => {
         onSave={handleSaveFields}
       />
 
-      {/* Admin Test & Mutation Simulator Modal (Req #7 & #8) */}
+      {/* Admin Test & Mutation Simulator Modal */}
       <AdminPanelModal
         teams={teams}
         isOpen={isAdminOpen}

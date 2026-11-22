@@ -137,7 +137,7 @@ export const NotificationsPanel: React.FC<NotificationsPanelProps> = ({
                   </div>
                 </div>
 
-                {/* Grouped Changes List (Requirement #8: One grouped notification) */}
+                {/* Grouped Changes List */}
                 <div className="mt-2.5 space-y-1.5 bg-slate-950/60 rounded-lg p-2.5 border border-slate-800/60 text-xs">
                   {item.changes.map((change, idx) => (
                     <div

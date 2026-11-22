@@ -52,7 +52,7 @@ export const LiveScorecard: React.FC = () => {
         </div>
         <div className="flex items-center space-x-2 text-xs text-slate-400">
           <Activity className="w-3.5 h-3.5 text-blue-400" />
-          <span>WebSocket Live Stream (Req #9)</span>
+          <span>Real-time Match Feed</span>
         </div>
       </div>
 

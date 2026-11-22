@@ -75,7 +75,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     }
   };
 
-  const rawMongoScript = `// Run in mongosh or Atlas shell to test Requirement #7:
+  const rawMongoScript = `// Run in mongosh or Atlas shell to test direct MongoDB writes:
 db.teams.updateOne(
   { short: "${currentTeam?.short || 'CSK'}" },
   {
@@ -113,7 +113,7 @@ db.teams.updateOne(
                 <span>Admin Test & Notification Simulator</span>
               </h3>
               <p className="text-xs text-slate-400">
-                Test Requirement #7 (Admin API & raw Mongo writes) and #8 (Grouped multi-field diff)
+                Simulate admin team mutations and test real-time notification dispatch
               </p>
             </div>
           </div>
@@ -225,7 +225,7 @@ db.teams.updateOne(
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-300">
               <Terminal className="w-4 h-4 text-emerald-400" />
-              <span>Test Direct MongoDB Update (Requirement #7)</span>
+              <span>Direct MongoDB Update (mongosh / Atlas)</span>
             </div>
             <button
               onClick={copyMongoScript}
