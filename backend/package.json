@@ -9,7 +9,8 @@
     "start:prod": "node dist/src/main.js",
     "seed": "ts-node scripts/seed-teams.ts",
     "simulate": "ts-node scripts/simulate-match.ts",
-    "test:direct-update": "ts-node scripts/test-direct-mongo-update.ts"
+    "test:direct-update": "ts-node scripts/test-direct-mongo-update.ts",
+    "test:verify": "ts-node scripts/verify-change-streams.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.4",

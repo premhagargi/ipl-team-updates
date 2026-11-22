@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Team } from '../types';
-import { Sliders, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 interface MyTeamsGridProps {
   teams: Team[];
   onManageFields: (team: Team) => void;
   onUnsubscribe: (teamId: string) => void;
+  onQuickUpdateField?: (teamId: string, fields: 'ALL' | string[]) => Promise<void>;
 }
 
 const TEAM_ACCENTS: Record<string, string> = {
@@ -21,11 +22,20 @@ const TEAM_ACCENTS: Record<string, string> = {
   PBKS: 'border-l-rose-500',
 };
 
+const QUICK_FIELD_PRESETS = [
+  { label: 'Everything', value: 'ALL' as const },
+  { label: 'Captain', value: ['captain'] },
+  { label: 'Head Coach', value: ['headCoach'] },
+  { label: 'Wins & Record', value: ['wins', 'losses', 'points'] },
+];
+
 export const MyTeamsGrid: React.FC<MyTeamsGridProps> = ({
   teams,
   onManageFields,
   onUnsubscribe,
+  onQuickUpdateField,
 }) => {
+  const [updatingTeamId, setUpdatingTeamId] = useState<string | null>(null);
   const subscribedTeams = teams.filter((t) => t.isSubscribed);
 
   if (subscribedTeams.length === 0) {
@@ -35,11 +45,31 @@ export const MyTeamsGrid: React.FC<MyTeamsGridProps> = ({
           No team subscriptions yet
         </h3>
         <p className="text-xs text-zinc-500 max-w-sm mx-auto mt-1">
-          Subscribe to teams from the catalogue below to receive instant real-time notifications when documents update.
+          Subscribe to franchises below to receive instant real-time notifications on squad and record changes.
         </p>
       </div>
     );
   }
+
+  const handleChipClick = async (teamId: string, fields: 'ALL' | string[]) => {
+    if (!onQuickUpdateField) return;
+    setUpdatingTeamId(teamId);
+    try {
+      await onQuickUpdateField(teamId, fields);
+    } finally {
+      setUpdatingTeamId(null);
+    }
+  };
+
+  const isChipSelected = (teamFields: 'ALL' | string[] | null | undefined, chipVal: 'ALL' | string[]) => {
+    if (chipVal === 'ALL') {
+      return teamFields === 'ALL' || !teamFields;
+    }
+    if (Array.isArray(teamFields)) {
+      return chipVal.every((f) => teamFields.includes(f)) && teamFields.length === chipVal.length;
+    }
+    return false;
+  };
 
   return (
     <div className="mb-10">
@@ -56,11 +86,6 @@ export const MyTeamsGrid: React.FC<MyTeamsGridProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {subscribedTeams.map((team) => {
-          const isAllFields =
-            team.subscribedFields === 'ALL' || !team.subscribedFields;
-          const fieldsList = Array.isArray(team.subscribedFields)
-            ? team.subscribedFields
-            : ['All fields'];
           const accentClass = TEAM_ACCENTS[team.short] || 'border-l-zinc-500';
 
           return (
@@ -80,7 +105,7 @@ export const MyTeamsGrid: React.FC<MyTeamsGridProps> = ({
                   </div>
                   <span className="flex items-center space-x-1 text-[11px] font-semibold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">
                     <Check className="w-3 h-3" />
-                    <span>Active</span>
+                    <span>Subscribed</span>
                   </span>
                 </div>
 
@@ -104,42 +129,50 @@ export const MyTeamsGrid: React.FC<MyTeamsGridProps> = ({
                   </div>
                 </div>
 
-                {/* Subscribed Fields */}
+                {/* Field Filter Chips (Fig 4: Chip selection = PATCH /teams/:id/subscription) */}
                 <div className="mb-3">
-                  <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">
-                    Alert Rules:
+                  <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5 flex justify-between items-center">
+                    <span>Notifying On:</span>
+                    <button
+                      onClick={() => onManageFields(team)}
+                      className="text-[10px] text-zinc-400 hover:text-white underline"
+                    >
+                      Advanced
+                    </button>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {isAllFields ? (
-                      <span className="text-[11px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-medium">
-                        All Document Fields
-                      </span>
-                    ) : (
-                      fieldsList.map((f, i) => (
-                        <span
-                          key={i}
-                          className="text-[11px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-medium capitalize"
+                  <div className="flex flex-wrap gap-1.5">
+                    {QUICK_FIELD_PRESETS.map((preset) => {
+                      const active = isChipSelected(team.subscribedFields, preset.value);
+                      return (
+                        <button
+                          key={preset.label}
+                          disabled={updatingTeamId === team._id}
+                          onClick={() => handleChipClick(team._id, preset.value)}
+                          className={`text-[11px] px-2 py-0.5 rounded font-medium transition ${
+                            active
+                              ? 'bg-white text-zinc-950 font-bold'
+                              : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'
+                          }`}
                         >
-                          {f}
-                        </span>
-                      ))
-                    )}
+                          {preset.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex items-center space-x-2 pt-3 border-t border-[#1a1e28]">
+              <div className="flex items-center justify-between pt-3 border-t border-[#1a1e28]">
                 <button
                   onClick={() => onManageFields(team)}
-                  className="flex-1 py-1.5 px-3 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition border border-zinc-700/80 flex items-center justify-center space-x-1"
+                  className="py-1.5 px-3 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition border border-zinc-700"
                 >
-                  <Sliders className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>Alert Rules</span>
+                  Custom Rule
                 </button>
                 <button
                   onClick={() => onUnsubscribe(team._id)}
-                  className="py-1.5 px-3 rounded hover:bg-zinc-800 text-zinc-500 hover:text-red-400 text-xs font-semibold transition"
+                  className="py-1.5 px-2 rounded text-zinc-500 hover:text-red-400 text-xs font-medium transition"
                 >
                   Unsubscribe
                 </button>

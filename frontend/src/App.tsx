@@ -103,6 +103,7 @@ export const App: React.FC = () => {
           teams={teams}
           onManageFields={handleOpenFieldModal}
           onUnsubscribe={handleUnsubscribe}
+          onQuickUpdateField={handleSaveFields}
         />
 
         {/* Statistical Insights & Charts */}
