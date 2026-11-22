@@ -11,6 +11,8 @@ export class TeamsChangeStreamService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(TeamsChangeStreamService.name);
   private changeStream: any = null;
   private isDestroyed = false;
+  private isReconnecting = false;
+  private reconnectTimeout: any = null;
   // §7.4 Reconnect handling: resume token stored in memory
   private resumeToken: any = null;
 
@@ -27,15 +29,41 @@ export class TeamsChangeStreamService implements OnModuleInit, OnModuleDestroy {
 
   onModuleDestroy() {
     this.isDestroyed = true;
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+    }
     if (this.changeStream) {
       try {
+        this.changeStream.removeAllListeners();
         this.changeStream.close();
       } catch (e) {}
+      this.changeStream = null;
     }
+  }
+
+  private scheduleReconnect(delayMs = 2000) {
+    if (this.isDestroyed || this.isReconnecting) return;
+    this.isReconnecting = true;
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+    }
+    this.reconnectTimeout = setTimeout(() => {
+      this.isReconnecting = false;
+      this.startTeamsWatcher();
+    }, delayMs);
   }
 
   private startTeamsWatcher() {
     if (this.isDestroyed) return;
+
+    // Clean up any existing stream before creating a new one
+    if (this.changeStream) {
+      try {
+        this.changeStream.removeAllListeners();
+        this.changeStream.close();
+      } catch (e) {}
+      this.changeStream = null;
+    }
 
     try {
       this.logger.log(
@@ -66,7 +94,7 @@ export class TeamsChangeStreamService implements OnModuleInit, OnModuleDestroy {
       });
 
       this.changeStream.on('error', (err: any) => {
-        this.logger.warn(`Teams Change Stream dropped, reconnecting: ${err.message}`);
+        this.logger.warn(`Teams Change Stream dropped: ${err.message}`);
         // If resumeToken falls outside oplog retention window (e.g. Atlas M0), clear it and start fresh
         if (
           err.message &&
@@ -78,23 +106,16 @@ export class TeamsChangeStreamService implements OnModuleInit, OnModuleDestroy {
           this.logger.warn('Resume token invalidated or outside oplog window. Resetting resume token to start fresh.');
           this.resumeToken = null;
         }
-
-        if (!this.isDestroyed) {
-          setTimeout(() => this.startTeamsWatcher(), 1500);
-        }
+        this.scheduleReconnect(2000);
       });
 
       this.changeStream.on('close', () => {
         this.logger.warn('Teams Change Stream connection closed.');
-        if (!this.isDestroyed) {
-          setTimeout(() => this.startTeamsWatcher(), 1500);
-        }
+        this.scheduleReconnect(2000);
       });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.warn(`Teams Change Stream initialization failed (${err.message}). Retrying in 2s...`);
-      if (!this.isDestroyed) {
-        setTimeout(() => this.startTeamsWatcher(), 2000);
-      }
+      this.scheduleReconnect(2000);
     }
   }
 

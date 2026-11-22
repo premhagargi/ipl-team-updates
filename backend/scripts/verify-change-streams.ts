@@ -145,19 +145,6 @@ async function verify() {
 
   // Step 7: Test live match stream (Requirement #9)
   console.log('\n7. Testing Live Match Change Stream broadcast (Requirement #9)...');
-  await LiveMatchModel.collection.updateOne(
-    { matchId: 'current_match' },
-    {
-      $set: {
-        runs: 165,
-        wickets: 3,
-        oversBowled: '17.2',
-        currentOverBalls: ['4', '6', '1'],
-        updatedAt: new Date(),
-      },
-    },
-  );
-
   await new Promise<void>((resolve, reject) => {
     const start = Date.now();
     const interval = setInterval(() => {
@@ -166,7 +153,7 @@ async function verify() {
         resolve();
       } else if (Date.now() - start > 10000) {
         clearInterval(interval);
-        reject(new Error('Timed out waiting for match_update event'));
+        reject(new Error('Timed out waiting for match_update event from simulator'));
       }
     }, 200);
   });

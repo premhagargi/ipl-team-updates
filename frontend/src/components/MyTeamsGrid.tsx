@@ -125,29 +125,29 @@ export const MyTeamsGrid: React.FC<MyTeamsGridProps> = ({
           return (
             <div
               key={team._id}
-              className={`bg-white rounded-xl border transition-all duration-500 border-l-4 ${accent.border} p-4.5 shadow-sm flex flex-col justify-between ${
+              className={`bg-white rounded-2xl border transition-all duration-300 border-l-4 ${accent.border} p-5 sm:p-6 shadow-sm flex flex-col justify-between ${
                 isRecentlyUpdated
                   ? 'border-emerald-500 ring-2 ring-emerald-400 shadow-md scale-[1.01]'
                   : 'border-slate-200/90 hover:border-slate-300'
               }`}
             >
               <div>
-                <div className="flex items-start justify-between mb-3">
+                <div className="flex items-start justify-between mb-4">
                   <div>
-                    <span className={`text-[10px] font-display font-extrabold px-1.5 py-0.5 rounded ${accent.bg} ${accent.text}`}>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${accent.bg} ${accent.text}`}>
                       {team.short}
                     </span>
-                    <h3 className="text-base font-display font-bold text-slate-900 tracking-tight mt-1">
+                    <h3 className="text-base font-bold text-slate-900 tracking-tight mt-1.5">
                       {team.name}
                     </h3>
                   </div>
                   <div className="flex flex-col items-end space-y-1">
-                    <span className="flex items-center space-x-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    <span className="flex items-center space-x-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
                       <Check className="w-3 h-3" />
                       <span>Active</span>
                     </span>
                     {isRecentlyUpdated && (
-                      <span className="text-[10px] font-sans font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded animate-pulse">
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full animate-pulse">
                         Live Updated ✨
                       </span>
                     )}
@@ -155,32 +155,32 @@ export const MyTeamsGrid: React.FC<MyTeamsGridProps> = ({
                 </div>
 
                 {/* Team Info Table */}
-                <div className="space-y-1.5 text-xs text-slate-700 mb-3 bg-slate-50 rounded-lg p-2.5 border border-slate-100 font-sans">
-                  <div className="flex justify-between">
+                <div className="space-y-2 text-xs text-slate-700 mb-4 bg-slate-50/80 rounded-xl p-3.5 border border-slate-100">
+                  <div className="flex justify-between items-center">
                     <span className="text-slate-500 font-medium">Captain</span>
                     <span className="font-bold text-slate-900">{team.captain}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-slate-500 font-medium">Head Coach</span>
                     <span className="font-semibold text-slate-800">{team.headCoach}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-slate-500 font-medium">Home Ground</span>
-                    <span className="text-slate-600 truncate max-w-[150px]">{team.homeGround}</span>
+                    <span className="text-slate-600 truncate max-w-[160px]">{team.homeGround}</span>
                   </div>
-                  <div className="flex justify-between pt-1 border-t border-slate-200/60">
+                  <div className="flex justify-between items-center pt-1.5 border-t border-slate-200/60">
                     <span className="text-slate-500 font-medium">Titles Won</span>
-                    <span className="font-mono font-bold text-amber-700">{team.titles}</span>
+                    <span className="font-bold text-amber-700">{team.titles}</span>
                   </div>
                 </div>
 
-                {/* Field Filter Chips (Fig 4) */}
-                <div className="mb-3">
-                  <div className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex justify-between items-center">
+                {/* Field Filter Chips */}
+                <div className="mb-4">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex justify-between items-center">
                     <span>Alert Rules:</span>
                     <button
                       onClick={() => onManageFields(team)}
-                      className="text-[10px] text-blue-600 font-sans font-semibold hover:underline"
+                      className="text-[11px] text-blue-600 font-semibold hover:underline"
                     >
                       Custom
                     </button>
@@ -193,7 +193,7 @@ export const MyTeamsGrid: React.FC<MyTeamsGridProps> = ({
                           key={preset.label}
                           disabled={updatingTeamId === team._id}
                           onClick={() => handleChipClick(team._id, preset.value)}
-                          className={`text-[11px] px-2.5 py-1 rounded-md font-sans font-semibold transition border ${
+                          className={`text-[11px] px-2.5 py-1 rounded-md font-medium transition border ${
                             active
                               ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
                               : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
@@ -208,16 +208,16 @@ export const MyTeamsGrid: React.FC<MyTeamsGridProps> = ({
               </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-3.5 border-t border-slate-100 mt-2">
                 <button
                   onClick={() => onManageFields(team)}
-                  className="py-1 px-2.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold font-sans transition border border-slate-200"
+                  className="py-1.5 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition border border-slate-200"
                 >
                   Configure Fields
                 </button>
                 <button
                   onClick={() => onUnsubscribe(team._id)}
-                  className="py-1 px-2 rounded text-slate-400 hover:text-rose-600 text-xs font-medium font-sans transition"
+                  className="py-1.5 px-2.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs font-medium transition"
                 >
                   Unsubscribe
                 </button>

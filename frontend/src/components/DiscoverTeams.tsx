@@ -81,7 +81,7 @@ export const DiscoverTeams: React.FC<DiscoverTeamsProps> = ({
           return (
             <div
               key={team._id}
-              className={`bg-white rounded-xl border p-3.5 shadow-sm transition-all duration-500 flex flex-col justify-between ${
+              className={`bg-white rounded-2xl border p-4.5 sm:p-5 shadow-sm transition-all duration-300 flex flex-col justify-between ${
                 isRecentlyUpdated
                   ? 'border-emerald-500 ring-2 ring-emerald-400 shadow-md scale-[1.02]'
                   : 'border-slate-200/90 hover:border-slate-300'

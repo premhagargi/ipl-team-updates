@@ -9,6 +9,8 @@ export class LivematchChangeStreamService implements OnModuleInit, OnModuleDestr
   private readonly logger = new Logger(LivematchChangeStreamService.name);
   private changeStream: any = null;
   private isDestroyed = false;
+  private isReconnecting = false;
+  private reconnectTimeout: any = null;
   // §7.4 Reconnect handling with resumeToken
   private resumeToken: any = null;
 
@@ -23,19 +25,45 @@ export class LivematchChangeStreamService implements OnModuleInit, OnModuleDestr
 
   onModuleDestroy() {
     this.isDestroyed = true;
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+    }
     if (this.changeStream) {
       try {
+        this.changeStream.removeAllListeners();
         this.changeStream.close();
       } catch (e) {}
+      this.changeStream = null;
     }
   }
 
   async getLatestMatch(): Promise<LiveMatchDocument | null> {
-    return this.liveMatchModel.findOne().sort({ updatedAt: -1 }).exec();
+    return this.liveMatchModel.findOne({ matchId: 'current_match' }).exec();
+  }
+
+  private scheduleReconnect(delayMs = 2000) {
+    if (this.isDestroyed || this.isReconnecting) return;
+    this.isReconnecting = true;
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+    }
+    this.reconnectTimeout = setTimeout(() => {
+      this.isReconnecting = false;
+      this.startLivematchWatcher();
+    }, delayMs);
   }
 
   private startLivematchWatcher() {
     if (this.isDestroyed) return;
+
+    // Clean up any existing stream before creating a new one
+    if (this.changeStream) {
+      try {
+        this.changeStream.removeAllListeners();
+        this.changeStream.close();
+      } catch (e) {}
+      this.changeStream = null;
+    }
 
     try {
       this.logger.log(
@@ -60,7 +88,7 @@ export class LivematchChangeStreamService implements OnModuleInit, OnModuleDestr
         try {
           if (['insert', 'update', 'replace'].includes(event.operationType)) {
             const doc = event.fullDocument;
-            if (doc) {
+            if (doc && doc.matchId === 'current_match') {
               // Broadcast full updated live match scorecard to all connected WebSocket clients
               this.socketRegistry.broadcast({
                 type: 'match_update',
@@ -74,7 +102,7 @@ export class LivematchChangeStreamService implements OnModuleInit, OnModuleDestr
       });
 
       this.changeStream.on('error', (err: any) => {
-        this.logger.warn(`Livematch Change Stream dropped, reconnecting: ${err.message}`);
+        this.logger.warn(`Livematch Change Stream dropped: ${err.message}`);
         if (
           err.message &&
           (err.message.includes('resume') ||
@@ -85,23 +113,16 @@ export class LivematchChangeStreamService implements OnModuleInit, OnModuleDestr
           this.logger.warn('Resetting Livematch resume token.');
           this.resumeToken = null;
         }
-
-        if (!this.isDestroyed) {
-          setTimeout(() => this.startLivematchWatcher(), 1500);
-        }
+        this.scheduleReconnect(2000);
       });
 
       this.changeStream.on('close', () => {
         this.logger.warn('Livematch Change Stream connection closed.');
-        if (!this.isDestroyed) {
-          setTimeout(() => this.startLivematchWatcher(), 1500);
-        }
+        this.scheduleReconnect(2000);
       });
-    } catch (err) {
+    } catch (err: any) {
       this.logger.warn(`Livematch Change Stream initialization failed (${err.message}). Retrying in 2s...`);
-      if (!this.isDestroyed) {
-        setTimeout(() => this.startLivematchWatcher(), 2000);
-      }
+      this.scheduleReconnect(2000);
     }
   }
 }

@@ -108,41 +108,39 @@ export const LiveScorecard: React.FC = () => {
 
   return (
     <div
-      className={`relative overflow-hidden bg-white rounded-2xl border transition-all duration-500 p-5 sm:p-6 mb-8 shadow-sm ${
-        wicketFlash
-          ? 'border-red-500 ring-4 ring-red-100 bg-red-50/20'
-          : 'border-slate-200/90 hover:border-slate-300'
+      className={`relative overflow-hidden bg-white rounded-2xl border transition-all duration-300 p-5 sm:p-6 mb-8 shadow-sm ${
+        wicketFlash ? 'border-rose-300 ring-2 ring-rose-100' : 'border-slate-200/90 hover:border-slate-300'
       }`}
     >
       {/* Top Match Info Strip (CREX / Hotstar style) */}
-      <div className="flex flex-wrap items-center justify-between pb-3.5 mb-4 border-b border-slate-100 gap-2">
+      <div className="flex flex-wrap items-center justify-between pb-3.5 mb-4 border-b border-slate-100 gap-2 min-h-[36px]">
         <div className="flex items-center space-x-2.5">
-          <span className="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200 text-[11px] font-black font-display tracking-wider uppercase">
+          <span className="flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200 text-[11px] font-bold tracking-wider uppercase">
             <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
             <span>LIVE</span>
           </span>
-          <span className="text-xs font-display font-bold text-slate-800">
+          <span className="text-xs font-bold text-slate-800">
             T20 Match • 1st Innings
           </span>
           <span className="text-xs text-slate-400 font-sans hidden sm:inline">•</span>
-          <span className="text-xs font-semibold text-slate-500 font-sans hidden sm:inline">
+          <span className="text-xs font-medium text-slate-500 font-sans hidden sm:inline">
             {liveMatch.bowlingTeam} choose to bowl
           </span>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 h-6">
           {boundaryEvent === '4' && (
-            <span className="animate-bounce px-2.5 py-0.5 rounded-full text-xs font-display font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm transition-all">
               FOUR! ⚡
             </span>
           )}
           {boundaryEvent === '6' && (
-            <span className="animate-bounce px-2.5 py-0.5 rounded-full text-xs font-display font-black bg-amber-100 text-amber-800 border border-amber-300 shadow-sm">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 shadow-sm transition-all">
               MAXIMUM 6! 🚀
             </span>
           )}
           {wicketFlash && (
-            <span className="animate-bounce px-2.5 py-0.5 rounded-full text-xs font-display font-black bg-rose-600 text-white shadow-sm">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-600 text-white shadow-sm transition-all">
               WICKET! 💥
             </span>
           )}
@@ -157,33 +155,29 @@ export const LiveScorecard: React.FC = () => {
         {/* Left: Batting Team & Big Score */}
         <div className="lg:col-span-5">
           <div className="flex items-center space-x-2 mb-1">
-            <span className="text-xs font-display font-black px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 uppercase">
+            <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 uppercase">
               Batting
             </span>
-            <span className="text-sm font-display font-bold text-slate-900 tracking-tight">
+            <span className="text-sm font-bold text-slate-900 tracking-tight">
               {liveMatch.battingTeam}
             </span>
           </div>
 
           <div className="flex items-baseline space-x-3 my-1">
-            <div className="flex items-baseline font-display font-black text-4xl sm:text-5xl tracking-tight">
-              {/* Runs Pop Effect */}
+            <div className="flex items-baseline font-black text-4xl sm:text-5xl tracking-tight select-none">
+              {/* Runs with smooth color transition (zero layout shift) */}
               <span
-                className={`inline-block transition-all duration-300 font-display ${
-                  runBump
-                    ? 'text-emerald-600 scale-105 -translate-y-1'
-                    : 'text-slate-900 scale-100'
+                className={`transition-colors duration-300 scoreboard-num ${
+                  runBump ? 'text-emerald-600' : 'text-slate-900'
                 }`}
               >
                 {liveMatch.runs}
               </span>
 
-              {/* Wickets Flash Effect */}
+              {/* Wickets with smooth color transition (zero layout shift) */}
               <span
-                className={`inline-block transition-all duration-300 font-display ${
-                  wicketFlash
-                    ? 'text-rose-600 scale-125 translate-x-1 font-black'
-                    : 'text-slate-500 font-bold'
+                className={`transition-colors duration-300 scoreboard-num ${
+                  wicketFlash ? 'text-rose-600 font-black' : 'text-slate-500 font-bold'
                 }`}
               >
                 /{liveMatch.wickets}
