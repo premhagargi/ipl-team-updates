@@ -73,8 +73,8 @@ export const StatsCharts: React.FC<StatsChartsProps> = ({ teams, loading = false
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={titlesData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} fontFamily="JetBrains Mono" />
-              <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} tickLine={false} fontFamily="JetBrains Mono" />
+              <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} fontFamily="Inter" />
+              <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} tickLine={false} fontFamily="Inter" />
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#ffffff',
@@ -116,8 +116,8 @@ export const StatsCharts: React.FC<StatsChartsProps> = ({ teams, loading = false
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={seasonData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} fontFamily="JetBrains Mono" />
-              <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} tickLine={false} fontFamily="JetBrains Mono" />
+              <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} fontFamily="Inter" />
+              <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} tickLine={false} fontFamily="Inter" />
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#ffffff',

@@ -8,13 +8,13 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        display: ['Outfit', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        display: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['Inter', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       letterSpacing: {
-        tighter: '-0.035em',
-        tight: '-0.02em',
-        normal: '-0.01em',
+        tighter: '-0.04em',
+        tight: '-0.025em',
+        normal: '-0.02em',
       },
       colors: {
         cricket: {
