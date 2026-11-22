@@ -15,12 +15,13 @@ import { AdminPanelModal } from './components/AdminPanelModal';
 
 export const App: React.FC = () => {
   const { user, isLoading } = useAuth();
-  const { refreshNotifications } = useSocket();
+  const { refreshNotifications, lastTeamUpdateNotification } = useSocket();
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [loadingTeams, setLoadingTeams] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [recentlyUpdatedTeamId, setRecentlyUpdatedTeamId] = useState<string | null>(null);
 
   // Field Filter Modal state
   const [selectedTeamForFields, setSelectedTeamForFields] = useState<Team | null>(null);
@@ -44,6 +45,37 @@ export const App: React.FC = () => {
       fetchTeams();
     }
   }, [user]);
+
+  // Dynamically update team stats when Change Stream push notification arrives
+  useEffect(() => {
+    if (lastTeamUpdateNotification && lastTeamUpdateNotification.teamId) {
+      const updatedTeamId =
+        typeof lastTeamUpdateNotification.teamId === 'string'
+          ? lastTeamUpdateNotification.teamId
+          : lastTeamUpdateNotification.teamId._id;
+
+      if (updatedTeamId) {
+        setTeams((prevTeams) =>
+          prevTeams.map((team) => {
+            if (team._id === updatedTeamId) {
+              const updated = { ...team };
+              lastTeamUpdateNotification.changes.forEach((c) => {
+                (updated as any)[c.field] = c.newValue;
+              });
+              return updated;
+            }
+            return team;
+          })
+        );
+
+        setRecentlyUpdatedTeamId(updatedTeamId);
+        const timer = setTimeout(() => {
+          setRecentlyUpdatedTeamId(null);
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [lastTeamUpdateNotification]);
 
   const handleSubscribe = async (teamId: string) => {
     try {
@@ -75,8 +107,11 @@ export const App: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#070b14] flex items-center justify-center text-slate-400">
-        <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center text-slate-500 font-sans">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-9 h-9 rounded-full border-3 border-blue-600 border-t-transparent animate-spin" />
+          <span className="text-xs font-semibold text-slate-500">Loading IPL Match Centre...</span>
+        </div>
       </div>
     );
   }
@@ -86,7 +121,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#070b14] flex flex-col text-slate-100">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col text-slate-800 font-sans antialiased">
       {/* Top Navigation */}
       <Navbar
         onOpenNotifications={() => setIsNotificationsOpen(true)}
@@ -101,17 +136,21 @@ export const App: React.FC = () => {
         {/* My Subscribed Teams */}
         <MyTeamsGrid
           teams={teams}
+          loading={loadingTeams}
+          recentlyUpdatedTeamId={recentlyUpdatedTeamId}
           onManageFields={handleOpenFieldModal}
           onUnsubscribe={handleUnsubscribe}
           onQuickUpdateField={handleSaveFields}
         />
 
         {/* Statistical Insights & Charts */}
-        <StatsCharts teams={teams} />
+        <StatsCharts teams={teams} loading={loadingTeams} />
 
         {/* All 10 IPL Franchises */}
         <DiscoverTeams
           teams={teams}
+          loading={loadingTeams}
+          recentlyUpdatedTeamId={recentlyUpdatedTeamId}
           onSubscribe={handleSubscribe}
           onUnsubscribe={handleUnsubscribe}
           onManageFields={handleOpenFieldModal}
@@ -141,8 +180,13 @@ export const App: React.FC = () => {
       />
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-[#0b0f19] py-6 text-center text-xs text-slate-500">
-        IPL Real-time Notification Service • Driven by MongoDB Atlas Change Streams & Raw WebSocket
+      <footer className="border-t border-slate-200/90 bg-white py-6 text-center text-xs text-slate-500 font-sans">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span>IPL Match Centre & Real-time Notification Platform</span>
+          <span className="font-mono text-[11px] text-slate-400">
+            Powered by MongoDB Atlas Change Streams & Raw WebSocket
+          </span>
+        </div>
       </footer>
     </div>
   );

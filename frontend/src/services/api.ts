@@ -108,6 +108,17 @@ export const api = {
     return res.json();
   },
 
+  // Live Match
+  async getLiveMatch() {
+    try {
+      const res = await fetch(`${API_BASE}/live-match`);
+      if (!res.ok) return null;
+      return res.json();
+    } catch {
+      return null;
+    }
+  },
+
   async markAllRead() {
     const res = await fetch(`${API_BASE}/notifications/mark-all-read`, {
       method: 'POST',

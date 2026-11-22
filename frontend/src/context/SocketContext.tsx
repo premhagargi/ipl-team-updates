@@ -17,6 +17,7 @@ interface SocketContextType {
   unreadCount: number;
   markAllAsRead: () => Promise<void>;
   refreshNotifications: () => Promise<void>;
+  lastTeamUpdateNotification: NotificationItem | null;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -29,8 +30,16 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const [liveMatch, setLiveMatch] = useState<LiveMatch | null>(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [lastTeamUpdateNotification, setLastTeamUpdateNotification] = useState<NotificationItem | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<any>(null);
+
+  // Fetch initial match immediately on mount (NO ENDLESS LOADING)
+  useEffect(() => {
+    api.getLiveMatch().then((match) => {
+      if (match) setLiveMatch(match);
+    });
+  }, []);
 
   // Fetch initial notifications on login/mount
   const refreshNotifications = useCallback(async () => {
@@ -92,6 +101,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
             setNotifications((prev) => [newNotification, ...prev]);
             setUnreadCount((prev) => prev + 1);
+            setLastTeamUpdateNotification(newNotification);
 
             // Trigger notification sound / visual cue if supported
             if ('Notification' in window && Notification.permission === 'granted') {
@@ -156,6 +166,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         unreadCount,
         markAllAsRead,
         refreshNotifications,
+        lastTeamUpdateNotification,
       }}
     >
       {children}

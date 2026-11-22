@@ -6,187 +6,227 @@ dotenv.config();
 
 const MONGO_URI =
   process.env.MONGO_URI ||
-  'mongodb://127.0.0.1:27017/ipl_updates?replicaSet=rs0&directConnection=true';
+  'mongodb+srv://premhagaragi:K9cF4x00BVsdJoEo@cluster1.upe8tms.mongodb.net/ipl_updates?retryWrites=true&w=majority';
 
-const BATTERS_CSK = [
+// 11 Real Squad Players per Team (Strict Cricket Rules)
+const SQUAD_CSK = [
   'Ruturaj Gaikwad',
   'Devon Conway',
   'Shivam Dube',
-  'MS Dhoni',
-  'Ravindra Jadeja',
   'Daryl Mitchell',
+  'Ravindra Jadeja',
+  'MS Dhoni',
+  'Moeen Ali',
+  'Deepak Chahar',
+  'Shardul Thakur',
+  'Tushar Deshpande',
+  'Matheesha Pathirana',
 ];
 
 const BOWLERS_MI = [
-  'Jasprit Bumrah',
-  'Gerald Coetzee',
-  'Hardik Pandya',
-  'Piyush Chawla',
-  'Nuwan Thushara',
+  { name: 'Jasprit Bumrah', overs: 0, legalBalls: 0, runsConceded: 0, wickets: 0, maxOvers: 4 },
+  { name: 'Gerald Coetzee', overs: 0, legalBalls: 0, runsConceded: 0, wickets: 0, maxOvers: 4 },
+  { name: 'Hardik Pandya', overs: 0, legalBalls: 0, runsConceded: 0, wickets: 0, maxOvers: 4 },
+  { name: 'Piyush Chawla', overs: 0, legalBalls: 0, runsConceded: 0, wickets: 0, maxOvers: 4 },
+  { name: 'Nuwan Thushara', overs: 0, legalBalls: 0, runsConceded: 0, wickets: 0, maxOvers: 4 },
 ];
 
-const POSSIBLE_BALL_OUTCOMES = [
-  { label: '0', runs: 0, isWicket: false, desc: 'Dot ball' },
-  { label: '1', runs: 1, isWicket: false, desc: 'Single' },
-  { label: '1', runs: 1, isWicket: false, desc: 'Single' },
-  { label: '2', runs: 2, isWicket: false, desc: 'Two runs' },
-  { label: '4', runs: 4, isWicket: false, desc: 'Boundary FOUR!' },
-  { label: '6', runs: 6, isWicket: false, desc: 'Maximum SIX!' },
-  { label: 'W', runs: 0, isWicket: true, desc: 'OUT! Wicket falls!' },
+// Weighted authentic T20 ball outcomes
+const T20_BALL_OUTCOMES = [
+  { label: '0', runs: 0, isLegal: true, isWicket: false, desc: 'Dot ball' },
+  { label: '0', runs: 0, isLegal: true, isWicket: false, desc: 'Dot ball' },
+  { label: '1', runs: 1, isLegal: true, isWicket: false, desc: 'Single' },
+  { label: '1', runs: 1, isLegal: true, isWicket: false, desc: 'Single' },
+  { label: '2', runs: 2, isLegal: true, isWicket: false, desc: 'Two runs' },
+  { label: '4', runs: 4, isLegal: true, isWicket: false, desc: 'Boundary FOUR!' },
+  { label: '6', runs: 6, isLegal: true, isWicket: false, desc: 'Maximum SIX!' },
+  { label: 'W', runs: 0, isLegal: true, isWicket: true, desc: 'OUT! Wicket falls!' },
+  { label: 'Wd', runs: 1, isLegal: false, isWicket: false, desc: 'Wide ball (+1 run)' },
 ];
 
 async function simulate() {
-  console.log('Starting standalone Live Match Simulator...');
-  console.log('Connecting to Mongo at:', MONGO_URI);
+  console.log('===============================================================');
+  console.log('🏏 Standalone Live Cricket Match Simulator (Authentic T20 Rules)');
+  console.log('===============================================================\n');
+  console.log('Connecting to MongoDB Atlas...');
 
   await mongoose.connect(MONGO_URI);
-  console.log('Connected to MongoDB. Simulator running every 3.5 seconds.');
-  console.log('Raw writes to "livematches" collection will be picked up by Change Streams!\n');
+  console.log('Connected! Match state mutating every 3.2s via MongoDB Change Streams.\n');
 
   const LiveMatchModel = mongoose.model('LiveMatch', LiveMatchSchema);
 
-  // Load or initialize match
-  let match = await LiveMatchModel.findOne({ matchId: 'current_match' });
-  if (!match) {
-    match = await LiveMatchModel.create({
-      matchId: 'current_match',
-      battingTeam: 'Chennai Super Kings',
-      bowlingTeam: 'Mumbai Indians',
-      runs: 120,
-      wickets: 2,
-      oversBowled: '13.0',
-      totalOvers: 20,
-      batters: [
-        { name: BATTERS_CSK[0], runs: 48, balls: 34, onStrike: true },
-        { name: BATTERS_CSK[1], runs: 32, balls: 26, onStrike: false },
-      ],
-      bowler: { name: BOWLERS_MI[0], overs: 2.0, runsConceded: 14, wickets: 1 },
-      currentOverBalls: [],
-      updatedAt: new Date(),
-    });
-  }
+  // Match State
+  let battingTeam = 'Chennai Super Kings';
+  let bowlingTeam = 'Mumbai Indians';
+  let runs = 142;
+  let wickets = 3;
+  let totalLegalBalls = 15 * 6 + 4; // 15.4 overs
+  let currentOverBalls: string[] = ['1', '4', '0', 'W'];
+  let innings = 1;
+  let target = 0;
 
-  let totalBalls = 13 * 6;
-  let batterIndex = 2;
-  let bowlerIndex = 0;
+  // Batters (max 10 wickets = 11 players)
+  let nextBatterIdx = 4;
+  let batters = [
+    { name: SQUAD_CSK[2], runs: 38, balls: 24, onStrike: true }, // Dube
+    { name: SQUAD_CSK[3], runs: 16, balls: 11, onStrike: false }, // Mitchell
+  ];
+
+  // Bowlers tracking (max 4 overs = 24 balls per bowler)
+  let bowlers = JSON.parse(JSON.stringify(BOWLERS_MI));
+  let currentBowlerIdx = 0;
+  let lastBowlerIdx = -1;
 
   const interval = setInterval(async () => {
     try {
-      totalBalls++;
-      const completedOvers = Math.floor(totalBalls / 6);
-      const ballsInCurrentOver = totalBalls % 6;
-      const oversBowledStr = `${completedOvers}.${ballsInCurrentOver}`;
-
       // Pick random outcome
       const outcome =
-        POSSIBLE_BALL_OUTCOMES[
-          Math.floor(Math.random() * POSSIBLE_BALL_OUTCOMES.length)
+        T20_BALL_OUTCOMES[
+          Math.floor(Math.random() * T20_BALL_OUTCOMES.length)
         ];
 
-      let newRuns = (match.runs || 120) + outcome.runs;
-      let newWickets = match.wickets || 2;
-      let currentOverBalls = [...(match.currentOverBalls || [])];
+      // Update runs
+      runs += outcome.runs;
+      bowlers[currentBowlerIdx].runsConceded += outcome.runs;
 
-      if (ballsInCurrentOver === 1) {
-        currentOverBalls = [];
-        bowlerIndex = (bowlerIndex + 1) % BOWLERS_MI.length;
-      }
+      let ballsInOver = totalLegalBalls % 6;
+      let completedOvers = Math.floor(totalLegalBalls / 6);
 
-      currentOverBalls.push(outcome.label);
-
-      // Batters update
-      let batters = match.batters ? [...match.batters] : [];
-      if (batters.length < 2) {
-        batters = [
-          { name: BATTERS_CSK[0], runs: 48, balls: 34, onStrike: true },
-          { name: BATTERS_CSK[1], runs: 32, balls: 26, onStrike: false },
-        ];
-      }
-
-      const strikerIndex = batters.findIndex((b) => b.onStrike);
-      const nonStrikerIndex = strikerIndex === 0 ? 1 : 0;
-
-      if (outcome.isWicket) {
-        newWickets++;
-        console.log(`💥 WICKET! ${batters[strikerIndex]?.name} is OUT! (${oversBowledStr})`);
-        const nextBatterName = BATTERS_CSK[batterIndex % BATTERS_CSK.length];
-        batterIndex++;
-        batters[strikerIndex] = {
-          name: nextBatterName,
-          runs: 0,
-          balls: 0,
-          onStrike: true,
-        };
+      // Handle Extras (Wide doesn't count as a legal ball)
+      if (!outcome.isLegal) {
+        currentOverBalls.push(outcome.label);
+        console.log(`[EXTRA: ${outcome.label}] Total: ${runs}/${wickets} | Current Over: [${currentOverBalls.join(' ')}]`);
       } else {
-        batters[strikerIndex].runs += outcome.runs;
-        batters[strikerIndex].balls += 1;
+        // Legal ball
+        totalLegalBalls++;
+        ballsInOver = totalLegalBalls % 6;
+        completedOvers = Math.floor(totalLegalBalls / 6);
+        bowlers[currentBowlerIdx].legalBalls++;
 
-        // Strike rotation on odd runs
-        if (outcome.runs % 2 === 1) {
-          batters[strikerIndex].onStrike = false;
-          batters[nonStrikerIndex].onStrike = true;
+        currentOverBalls.push(outcome.label);
+
+        // Striker / Non-striker index
+        const strikerIdx = batters.findIndex((b) => b.onStrike);
+        const nonStrikerIdx = strikerIdx === 0 ? 1 : 0;
+
+        if (outcome.isWicket) {
+          wickets++;
+          bowlers[currentBowlerIdx].wickets++;
+          console.log(`💥 WICKET! ${batters[strikerIdx]?.name} OUT! Score: ${runs}/${wickets} (${completedOvers}.${ballsInOver} ov)`);
+
+          // Rule: Max 10 wickets in T20 (All Out!)
+          if (wickets >= 10) {
+            console.log(`\n🛑 ALL OUT! ${battingTeam} bowled out for ${runs} in ${completedOvers}.${ballsInOver} overs!`);
+          } else if (nextBatterIdx < SQUAD_CSK.length) {
+            // New batter takes strike
+            const newBatterName = SQUAD_CSK[nextBatterIdx++];
+            batters[strikerIdx] = {
+              name: newBatterName,
+              runs: 0,
+              balls: 0,
+              onStrike: true,
+            };
+          }
+        } else {
+          // Add runs to batter
+          batters[strikerIdx].runs += outcome.runs;
+          batters[strikerIdx].balls += 1;
+
+          // Strike rotation on odd runs (1, 3)
+          if (outcome.runs % 2 === 1) {
+            batters[strikerIdx].onStrike = false;
+            batters[nonStrikerIdx].onStrike = true;
+          }
+        }
+
+        // Over Completed (6 legal balls)
+        if (ballsInOver === 0) {
+          // Rotate strike at end of over
+          batters[0].onStrike = !batters[0].onStrike;
+          batters[1].onStrike = !batters[1].onStrike;
+
+          // Update bowler overs
+          bowlers[currentBowlerIdx].overs = Math.floor(bowlers[currentBowlerIdx].legalBalls / 6);
+          lastBowlerIdx = currentBowlerIdx;
+
+          // Pick next eligible bowler (must have overs remaining < 4 and cannot bowl 2 in a row)
+          const eligibleIndices = bowlers
+            .map((b: any, i: number) => ({ index: i, overs: b.overs }))
+            .filter((b: any) => b.index !== lastBowlerIdx && b.overs < 4)
+            .map((b: any) => b.index);
+
+          if (eligibleIndices.length > 0) {
+            currentBowlerIdx = eligibleIndices[Math.floor(Math.random() * eligibleIndices.length)];
+          }
+
+          console.log(`\n🏁 Over ${completedOvers} complete: ${currentOverBalls.join(' ')} | ${runs}/${wickets}`);
+          currentOverBalls = [];
         }
       }
 
-      // Rotate strike at end of over
-      if (ballsInCurrentOver === 0) {
-        batters[0].onStrike = !batters[0].onStrike;
-        batters[1].onStrike = !batters[1].onStrike;
+      // Check Innings Completion (20 overs or 10 wickets)
+      if (completedOvers >= 20 || wickets >= 10) {
+        console.log(`\n======================================================`);
+        console.log(`🏁 1st Innings Ended: ${battingTeam} scored ${runs}/${wickets}`);
+        console.log(`Target for 2nd Innings: ${runs + 1}`);
+        console.log(`======================================================\n`);
+
+        // Reset for 2nd Innings simulation
+        target = runs + 1;
+        battingTeam = 'Mumbai Indians';
+        bowlingTeam = 'Chennai Super Kings';
+        runs = 0;
+        wickets = 0;
+        totalLegalBalls = 0;
+        currentOverBalls = [];
+        nextBatterIdx = 2;
+        batters = [
+          { name: 'Rohit Sharma', runs: 0, balls: 0, onStrike: true },
+          { name: 'Ishan Kishan', runs: 0, balls: 0, onStrike: false },
+        ];
+        bowlers = JSON.parse(JSON.stringify(BOWLERS_MI));
+        currentBowlerIdx = 0;
       }
 
-      // Bowler update
-      const bowler = {
-        name: BOWLERS_MI[bowlerIndex],
-        overs: Number((completedOvers + ballsInCurrentOver / 10).toFixed(1)),
-        runsConceded: (match.bowler?.runsConceded || 20) + outcome.runs,
-        wickets: (match.bowler?.wickets || 1) + (outcome.isWicket ? 1 : 0),
+      // Format overs string (e.g. "16.2")
+      const oversBowledStr = `${Math.floor(totalLegalBalls / 6)}.${totalLegalBalls % 6}`;
+
+      // Current bowler object
+      const activeBowler = bowlers[currentBowlerIdx];
+      const bowlerFormatted = {
+        name: activeBowler.name,
+        overs: Number((Math.floor(activeBowler.legalBalls / 6) + (activeBowler.legalBalls % 6) / 10).toFixed(1)),
+        runsConceded: activeBowler.runsConceded,
+        wickets: activeBowler.wickets,
       };
 
-      const updated = await LiveMatchModel.findOneAndUpdate(
+      // Write to MongoDB Atlas (Change Stream catches this!)
+      await LiveMatchModel.findOneAndUpdate(
         { matchId: 'current_match' },
         {
           $set: {
-            runs: newRuns,
-            wickets: newWickets,
+            battingTeam,
+            bowlingTeam,
+            runs,
+            wickets,
             oversBowled: oversBowledStr,
-            currentOverBalls,
+            totalOvers: 20,
             batters,
-            bowler,
+            bowler: bowlerFormatted,
+            currentOverBalls,
             updatedAt: new Date(),
           },
         },
-        { new: true },
+        { upsert: true, new: true },
       );
-
-      match = updated;
 
       console.log(
-        `[${oversBowledStr} ov] CSK: ${newRuns}/${newWickets} | Ball: ${outcome.label} (${outcome.desc}) | Bowler: ${bowler.name} | Striker: ${batters.find((b) => b.onStrike)?.name}`,
+        `[${oversBowledStr} ov] ${battingTeam}: ${runs}/${wickets} | Ball: ${outcome.label} (${outcome.desc}) | Bowler: ${bowlerFormatted.name} | Striker: ${batters.find((b) => b.onStrike)?.name}`,
       );
-
-      // If innings end at 20 overs, reset
-      if (completedOvers >= 20) {
-        console.log('\n🏁 Innings Completed! Resetting for new match simulation...\n');
-        totalBalls = 0;
-        await LiveMatchModel.findOneAndUpdate(
-          { matchId: 'current_match' },
-          {
-            $set: {
-              battingTeam: 'Royal Challengers Bengaluru',
-              bowlingTeam: 'Kolkata Knight Riders',
-              runs: 0,
-              wickets: 0,
-              oversBowled: '0.0',
-              currentOverBalls: [],
-              updatedAt: new Date(),
-            },
-          },
-        );
-      }
     } catch (err) {
       console.error('Simulator error:', err);
     }
-  }, 3500);
+  }, 3200);
 
   process.on('SIGINT', async () => {
     clearInterval(interval);
@@ -197,6 +237,6 @@ async function simulate() {
 }
 
 simulate().catch((err) => {
-  console.error('Failed to run simulator:', err);
+  console.error('Simulator failed:', err);
   process.exit(1);
 });

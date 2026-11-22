@@ -85,16 +85,16 @@ async function verify() {
   const TeamModel = mongoose.model('Team', TeamSchema);
   const LiveMatchModel = mongoose.model('LiveMatch', LiveMatchSchema);
 
-  const testCaptain = 'Ruturaj Gaikwad (Capt)';
-  const testWins = 8;
-  const testPoints = 16;
+  const testWins = (csk.wins || 7) + 1;
+  const testPoints = testWins * 2;
+  const testCaptain = csk.captain && csk.captain.includes('(Capt)') ? 'Ruturaj Gaikwad' : 'Ruturaj Gaikwad (Capt)';
 
   console.log(`   Mutating CSK in MongoDB Atlas directly:`);
   console.log(`   - captain -> "${testCaptain}"`);
   console.log(`   - wins    -> ${testWins}`);
   console.log(`   - points  -> ${testPoints}`);
 
-  await TeamModel.collection.updateOne(
+  const updateResult = await TeamModel.collection.updateOne(
     { _id: new mongoose.Types.ObjectId(csk._id) },
     {
       $set: {
@@ -105,7 +105,7 @@ async function verify() {
       },
     },
   );
-  console.log('✓ Direct write committed to MongoDB Atlas oplog!');
+  console.log(`✓ Direct write committed to MongoDB Atlas oplog! (modified: ${updateResult.modifiedCount})`);
 
   // Wait for Change Stream to catch oplog event and push over WebSocket
   console.log('\n5. Waiting for MongoDB Change Stream to catch oplog diff and push to WebSocket...');

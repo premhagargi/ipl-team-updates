@@ -40,33 +40,33 @@ export const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#08090c] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-[#10131a] rounded-xl border border-[#1f2430] p-6 sm:p-8">
+    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl border border-slate-200/90 shadow-xl p-6 sm:p-8">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center space-x-1.5 bg-red-600 text-white text-[11px] font-black px-2 py-0.5 rounded tracking-wide uppercase mb-3">
+          <div className="inline-flex items-center space-x-1.5 bg-[#e11d48] text-white text-[11px] font-black px-2.5 py-0.5 rounded tracking-wider uppercase font-display mb-3 shadow-sm">
             IPL MATCH CENTRE
           </div>
-          <h1 className="text-xl font-extrabold text-white tracking-tight">
-            Franchise Updates & Live Scores
+          <h1 className="text-2xl font-display font-black text-slate-900 tracking-tight">
+            Franchise Pulse & Live Scores
           </h1>
-          <p className="text-xs text-zinc-500 mt-1">
+          <p className="text-xs text-slate-500 mt-1 font-sans">
             Real-time notifications driven by MongoDB Change Streams
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-[#1c212c] mb-5">
+        <div className="flex border-b border-slate-200 mb-5">
           <button
             type="button"
             onClick={() => {
               setIsLoginTab(true);
               setError(null);
             }}
-            className={`pb-2 text-xs font-bold flex-1 text-center transition border-b-2 ${
+            className={`pb-2.5 text-xs font-display font-bold flex-1 text-center transition border-b-2 ${
               isLoginTab
-                ? 'border-white text-white'
-                : 'border-transparent text-zinc-500 hover:text-zinc-400'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-400 hover:text-slate-600'
             }`}
           >
             Sign In
@@ -77,10 +77,10 @@ export const AuthPage: React.FC = () => {
               setIsLoginTab(false);
               setError(null);
             }}
-            className={`pb-2 text-xs font-bold flex-1 text-center transition border-b-2 ${
+            className={`pb-2.5 text-xs font-display font-bold flex-1 text-center transition border-b-2 ${
               !isLoginTab
-                ? 'border-white text-white'
-                : 'border-transparent text-zinc-500 hover:text-zinc-400'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-slate-400 hover:text-slate-600'
             }`}
           >
             Create Account
@@ -88,15 +88,15 @@ export const AuthPage: React.FC = () => {
         </div>
 
         {error && (
-          <div className="mb-4 p-2.5 rounded bg-red-950/50 border border-red-800 text-red-300 text-xs font-medium">
+          <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium font-sans">
             {error}
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-3.5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-[11px] font-semibold text-zinc-400 mb-1 uppercase tracking-wide">
+            <label className="block text-[11px] font-display font-bold text-slate-700 mb-1 uppercase tracking-wide">
               Username
             </label>
             <input
@@ -104,13 +104,13 @@ export const AuthPage: React.FC = () => {
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
-              className="w-full bg-[#0b0d13] border border-[#1f2430] rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition"
+              placeholder="Enter your username"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition font-sans"
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-zinc-400 mb-1 uppercase tracking-wide">
+            <label className="block text-[11px] font-display font-bold text-slate-700 mb-1 uppercase tracking-wide">
               Password
             </label>
             <input
@@ -119,40 +119,40 @@ export const AuthPage: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-[#0b0d13] border border-[#1f2430] rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-500 transition"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition font-sans"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs transition disabled:opacity-50 mt-1"
+            className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-sans font-bold text-xs tracking-wide transition shadow-sm disabled:opacity-50 mt-1"
           >
             {loading ? 'Please wait...' : isLoginTab ? 'Continue to Match Centre' : 'Register Account'}
           </button>
         </form>
 
-        {/* Demo Logins */}
-        <div className="mt-6 pt-5 border-t border-[#1c212c]">
-          <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider text-center mb-2.5">
+        {/* 1-Click Demo Accounts */}
+        <div className="mt-6 pt-5 border-t border-slate-100">
+          <div className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider text-center mb-2.5">
             1-Click Demo Accounts
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             <button
               type="button"
               onClick={() => handleQuickLogin('admin', 'admin123')}
-              className="p-2 rounded bg-[#0b0d13] border border-[#1f2430] hover:border-zinc-700 text-left transition"
+              className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:border-slate-300 text-left transition"
             >
-              <div className="text-xs font-bold text-zinc-200">Admin</div>
-              <div className="text-[10px] text-zinc-500">admin / admin123</div>
+              <div className="text-xs font-display font-bold text-slate-900">Admin</div>
+              <div className="text-[10px] font-mono text-slate-500">admin / admin123</div>
             </button>
             <button
               type="button"
               onClick={() => handleQuickLogin('user1', 'password123')}
-              className="p-2 rounded bg-[#0b0d13] border border-[#1f2430] hover:border-zinc-700 text-left transition"
+              className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:border-slate-300 text-left transition"
             >
-              <div className="text-xs font-bold text-zinc-200">User</div>
-              <div className="text-[10px] text-zinc-500">user1 / password123</div>
+              <div className="text-xs font-display font-bold text-slate-900">Demo User</div>
+              <div className="text-[10px] font-mono text-slate-500">user1 / password123</div>
             </button>
           </div>
         </div>

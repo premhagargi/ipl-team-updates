@@ -6,6 +6,7 @@ import { Notification, NotificationSchema } from '../notifications/notification.
 import { LiveMatch, LiveMatchSchema } from './livematch.schema';
 import { TeamsChangeStreamService } from './teams-change-stream.service';
 import { LivematchChangeStreamService } from './livematch-change-stream.service';
+import { LiveMatchController } from './livematch.controller';
 import { RealtimeModule } from '../realtime/realtime.module';
 
 @Module({
@@ -18,6 +19,7 @@ import { RealtimeModule } from '../realtime/realtime.module';
     ]),
     RealtimeModule,
   ],
+  controllers: [LiveMatchController],
   providers: [TeamsChangeStreamService, LivematchChangeStreamService],
   exports: [TeamsChangeStreamService, LivematchChangeStreamService, MongooseModule],
 })

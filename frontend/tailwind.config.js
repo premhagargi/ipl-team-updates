@@ -8,19 +8,23 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['Outfit', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
       letterSpacing: {
-        tighter: '-0.04em',
-        tight: '-0.025em',
-        normal: '-0.015em',
+        tighter: '-0.035em',
+        tight: '-0.02em',
+        normal: '-0.01em',
       },
       colors: {
-        ipl: {
-          dark: '#0f172a',
-          card: '#1e293b',
-          border: '#334155',
-          primary: '#2563eb',
-          accent: '#f59e0b',
+        cricket: {
+          blue: '#1d4ed8',
+          red: '#dc2626',
+          green: '#16a34a',
+          yellow: '#ca8a04',
+          bg: '#f8fafc',
+          card: '#ffffff',
+          border: '#e2e8f0',
         }
       }
     },
