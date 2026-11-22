@@ -1,22 +1,13 @@
 import React from 'react';
 import { useSocket } from '../context/SocketContext';
-import { Radio, Activity, Zap } from 'lucide-react';
 
 export const LiveScorecard: React.FC = () => {
-  const { liveMatch, isConnected } = useSocket();
+  const { liveMatch } = useSocket();
 
   if (!liveMatch) {
     return (
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 border border-slate-800 shadow-xl flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-3 h-3 rounded-full bg-blue-500 animate-ping" />
-          <span className="text-slate-400 text-sm">
-            Waiting for live match feed from MongoDB Change Streams...
-          </span>
-        </div>
-        <span className="text-xs text-slate-500 font-mono">
-          Run "npm run simulate" in backend to stream scores
-        </span>
+      <div className="bg-[#12151c] rounded-xl p-5 border border-[#1f2430] text-center text-xs text-zinc-400">
+        Connecting to live scorecard broadcast stream...
       </div>
     );
   }
@@ -35,127 +26,103 @@ export const LiveScorecard: React.FC = () => {
   const nonStriker = liveMatch.batters?.find((b) => !b.onStrike);
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-[#111827] via-[#1e293b] to-[#0f172a] rounded-2xl border border-slate-800 shadow-2xl p-5 sm:p-6 mb-8">
-      {/* Background glow accent */}
-      <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Top match header */}
-      <div className="flex items-center justify-between border-b border-slate-800/80 pb-4 mb-5">
+    <div className="bg-[#11141c] rounded-xl border border-[#1f2430] p-4 sm:p-5 mb-8 shadow-sm">
+      {/* Top Banner Header */}
+      <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#1c212c]">
         <div className="flex items-center space-x-2">
-          <span className="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold tracking-wide">
-            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-            <span>LIVE MATCH</span>
+          <span className="flex items-center space-x-1 px-2 py-0.5 rounded bg-red-600 text-white text-[10px] font-bold uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            <span>LIVE</span>
           </span>
-          <span className="text-xs text-slate-400">
-            T20 Match • 20 Overs
+          <span className="text-xs font-semibold text-zinc-300">
+            {liveMatch.battingTeam} vs {liveMatch.bowlingTeam}
           </span>
         </div>
-        <div className="flex items-center space-x-2 text-xs text-slate-400">
-          <Activity className="w-3.5 h-3.5 text-blue-400" />
-          <span>Real-time Match Feed</span>
+        <div className="text-xs text-zinc-500 font-medium">
+          T20 • 20 Overs Match
         </div>
       </div>
 
-      {/* Main Scoreboard Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-        {/* Teams and Big Score */}
-        <div className="lg:col-span-5 flex flex-col justify-center">
-          <div className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-1">
-            {liveMatch.bowlingTeam} bowling
+      {/* Broadcast Score Strip */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+        {/* Main Score */}
+        <div className="md:col-span-4">
+          <div className="text-xs font-bold text-zinc-400 uppercase tracking-wide">
+            {liveMatch.battingTeam}
           </div>
-          <div className="text-xl sm:text-2xl font-bold text-white flex items-center space-x-2">
-            <span>{liveMatch.battingTeam}</span>
-          </div>
-
-          <div className="flex items-baseline space-x-3 my-2">
-            <span className="text-4xl sm:text-5xl font-black tracking-tight text-white">
+          <div className="flex items-baseline space-x-2.5 my-1">
+            <span className="text-3xl sm:text-4xl font-black text-white tabular-nums tracking-tight">
               {liveMatch.runs}
-              <span className="text-rose-400 font-bold">/{liveMatch.wickets}</span>
+              <span className="text-zinc-400 font-bold">/{liveMatch.wickets}</span>
             </span>
-            <span className="text-slate-400 text-sm font-medium">
-              ({liveMatch.oversBowled} / {liveMatch.totalOvers || 20} ov)
+            <span className="text-zinc-400 text-sm font-semibold tabular-nums">
+              ({liveMatch.oversBowled}/{liveMatch.totalOvers || 20} ov)
             </span>
           </div>
-
-          <div className="flex items-center space-x-4 text-xs text-slate-400">
-            <div>
-              CRR: <span className="text-white font-semibold">{currentRunRate}</span>
-            </div>
-            <div>
-              Target: <span className="text-slate-300 font-medium">1st Innings</span>
-            </div>
+          <div className="text-xs text-zinc-400 font-medium tabular-nums">
+            Current Run Rate: <span className="text-zinc-200 font-bold">{currentRunRate}</span>
           </div>
         </div>
 
-        {/* Batters & Bowler stats */}
-        <div className="lg:col-span-4 bg-slate-900/60 rounded-xl p-3.5 border border-slate-800 space-y-3">
-          {/* Batters */}
-          <div className="space-y-1.5">
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex justify-between">
+        {/* Batsmen & Bowler Grid */}
+        <div className="md:col-span-5 bg-[#0b0d13] rounded-lg p-3 border border-[#1a1e28] text-xs">
+          <div className="space-y-1.5 mb-2.5">
+            <div className="flex justify-between text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
               <span>Batter</span>
               <span>R (B)</span>
             </div>
             {striker && (
-              <div className="flex justify-between items-center text-sm font-medium">
-                <span className="text-amber-400 flex items-center space-x-1">
+              <div className="flex justify-between items-center text-zinc-200 font-semibold">
+                <span className="flex items-center space-x-1">
                   <span>{striker.name}</span>
-                  <span className="text-xs text-amber-300 font-bold">*</span>
+                  <span className="text-red-500 font-bold">*</span>
                 </span>
-                <span className="text-white">
-                  {striker.runs} <span className="text-xs text-slate-400">({striker.balls})</span>
+                <span className="tabular-nums">
+                  {striker.runs} <span className="text-zinc-500 font-normal">({striker.balls})</span>
                 </span>
               </div>
             )}
             {nonStriker && (
-              <div className="flex justify-between items-center text-sm text-slate-300">
+              <div className="flex justify-between items-center text-zinc-400">
                 <span>{nonStriker.name}</span>
-                <span>
-                  {nonStriker.runs} <span className="text-xs text-slate-400">({nonStriker.balls})</span>
+                <span className="tabular-nums">
+                  {nonStriker.runs} <span className="text-zinc-500 font-normal">({nonStriker.balls})</span>
                 </span>
               </div>
             )}
           </div>
 
-          {/* Bowler */}
           {liveMatch.bowler && (
-            <div className="pt-2 border-t border-slate-800 text-xs">
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex justify-between mb-1">
-                <span>Bowler</span>
-                <span>O - R - W</span>
-              </div>
-              <div className="flex justify-between items-center text-slate-200">
-                <span className="font-medium">{liveMatch.bowler.name}</span>
-                <span className="font-mono">
-                  {liveMatch.bowler.overs} - {liveMatch.bowler.runsConceded} -{' '}
-                  <span className="text-rose-400 font-bold">{liveMatch.bowler.wickets}</span>
-                </span>
-              </div>
+            <div className="pt-2 border-t border-[#1a1e28] flex justify-between items-center text-zinc-400">
+              <span className="font-medium text-zinc-300">{liveMatch.bowler.name}</span>
+              <span className="font-mono text-zinc-300 tabular-nums">
+                {liveMatch.bowler.overs} ov, {liveMatch.bowler.runsConceded} r,{' '}
+                <span className="text-red-400 font-bold">{liveMatch.bowler.wickets} w</span>
+              </span>
             </div>
           )}
         </div>
 
         {/* This Over Balls */}
-        <div className="lg:col-span-3 flex flex-col justify-center items-start lg:items-end">
-          <div className="text-xs font-medium text-slate-400 mb-2 flex items-center space-x-1">
-            <Zap className="w-3.5 h-3.5 text-amber-400" />
-            <span>This Over:</span>
+        <div className="md:col-span-3 flex flex-col md:items-end">
+          <div className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+            This Over
           </div>
-
           <div className="flex items-center space-x-1.5 flex-wrap gap-y-1.5">
-            {(!liveMatch.currentOverBalls || liveMatch.currentOverBalls.length === 0) ? (
-              <span className="text-xs text-slate-500 italic">Starting over...</span>
+            {!liveMatch.currentOverBalls || liveMatch.currentOverBalls.length === 0 ? (
+              <span className="text-xs text-zinc-600">Starting over...</span>
             ) : (
               liveMatch.currentOverBalls.map((ball, idx) => {
-                let badgeClass = 'bg-slate-800 text-slate-300 border-slate-700';
-                if (ball === '4') badgeClass = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 font-bold';
-                if (ball === '6') badgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-black';
-                if (ball === 'W') badgeClass = 'bg-rose-500/30 text-rose-400 border-rose-500/50 font-black';
-                if (ball === '0' || ball === '•') badgeClass = 'bg-slate-800/80 text-slate-400 border-slate-700';
+                let badge = 'bg-zinc-800 text-zinc-300 border-zinc-700';
+                if (ball === '4') badge = 'bg-emerald-950 text-emerald-400 border-emerald-700 font-bold';
+                if (ball === '6') badge = 'bg-amber-950 text-amber-300 border-amber-700 font-bold';
+                if (ball === 'W') badge = 'bg-red-950 text-red-400 border-red-700 font-black';
+                if (ball === '0') badge = 'bg-zinc-900 text-zinc-500 border-zinc-800';
 
                 return (
                   <span
                     key={idx}
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono border ${badgeClass}`}
+                    className={`w-6 h-6 rounded flex items-center justify-center text-xs font-mono border tabular-nums ${badge}`}
                   >
                     {ball === '0' ? '•' : ball}
                   </span>

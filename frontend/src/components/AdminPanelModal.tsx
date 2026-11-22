@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Team } from '../types';
 import { api } from '../services/api';
-import { X, Shield, Terminal, Zap, Check, AlertCircle } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 
 interface AdminPanelModalProps {
   teams: Team[];
@@ -55,7 +55,6 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     setErrMsg(null);
 
     try {
-      // Send multi-field update to admin endpoint
       await api.adminUpdateTeam(currentTeam._id, {
         captain,
         headCoach,
@@ -65,7 +64,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       });
 
       setSuccessMsg(
-        `✓ Team "${currentTeam.name}" updated! MongoDB Change Stream caught the update and pushed 1 grouped notification.`,
+        `Updated ${currentTeam.name}. MongoDB Change Stream detected the write and dispatched 1 grouped notification.`,
       );
       onTeamUpdated();
     } catch (err: any) {
@@ -75,8 +74,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     }
   };
 
-  const rawMongoScript = `// Run in mongosh or Atlas shell to test direct MongoDB writes:
-db.teams.updateOne(
+  const rawMongoScript = `db.teams.updateOne(
   { short: "${currentTeam?.short || 'CSK'}" },
   {
     $set: {
@@ -95,45 +93,32 @@ db.teams.updateOne(
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/75 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Modal Dialog */}
-      <div className="relative w-full max-w-2xl bg-[#0f172a] border border-amber-500/30 rounded-2xl shadow-2xl p-6 z-10 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-start justify-between pb-4 border-b border-slate-800">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              <Shield className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-                <span>Admin Test & Notification Simulator</span>
-              </h3>
-              <p className="text-xs text-slate-400">
-                Simulate admin team mutations and test real-time notification dispatch
-              </p>
-            </div>
+      <div className="relative w-full max-w-lg bg-[#10131a] border border-[#1f2430] rounded-xl p-5 z-10 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-start justify-between pb-3 border-b border-[#1c212c]">
+          <div>
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              Admin Mutation Controls
+            </h3>
+            <p className="text-xs text-zinc-500">
+              Trigger multi-field updates via Admin API or direct database script
+            </p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-          >
-            <X className="w-5 h-5" />
+          <button onClick={onClose} className="p-1 rounded text-zinc-500 hover:text-white">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Team Selector */}
-        <div className="my-5">
-          <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wide mb-1.5">
-            Select Team to Mutate:
+        <div className="my-4">
+          <label className="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wide mb-1">
+            Franchise:
           </label>
           <select
             value={selectedTeamId}
             onChange={(e) => handleTeamChange(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+            className="w-full bg-[#0b0d13] border border-[#1f2430] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-500"
           >
             {teams.map((t) => (
               <option key={t._id} value={t._id}>
@@ -144,101 +129,89 @@ db.teams.updateOne(
         </div>
 
         {/* Form */}
-        <form onSubmit={handleAdminUpdate} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form onSubmit={handleAdminUpdate} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">
+              <label className="block text-[11px] font-medium text-zinc-400 mb-1">
                 Captain
               </label>
               <input
                 type="text"
                 value={captain}
                 onChange={(e) => setCaptain(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none"
+                className="w-full bg-[#0b0d13] border border-[#1f2430] rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-zinc-500 focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">
+              <label className="block text-[11px] font-medium text-zinc-400 mb-1">
                 Head Coach
               </label>
               <input
                 type="text"
                 value={headCoach}
                 onChange={(e) => setHeadCoach(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none"
+                className="w-full bg-[#0b0d13] border border-[#1f2430] rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-zinc-500 focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">
+              <label className="block text-[11px] font-medium text-zinc-400 mb-1">
                 Wins
               </label>
               <input
                 type="number"
                 value={wins}
                 onChange={(e) => setWins(Number(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none"
+                className="w-full bg-[#0b0d13] border border-[#1f2430] rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-zinc-500 focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">
+              <label className="block text-[11px] font-medium text-zinc-400 mb-1">
                 Points
               </label>
               <input
                 type="number"
                 value={points}
                 onChange={(e) => setPoints(Number(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-500 focus:outline-none"
+                className="w-full bg-[#0b0d13] border border-[#1f2430] rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-zinc-500 focus:outline-none"
               />
             </div>
           </div>
 
           {successMsg && (
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center space-x-2">
-              <Check className="w-4 h-4 shrink-0" />
-              <span>{successMsg}</span>
+            <div className="p-2 rounded bg-emerald-950/60 border border-emerald-800 text-emerald-400 text-xs">
+              {successMsg}
             </div>
           )}
 
           {errMsg && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errMsg}</span>
+            <div className="p-2 rounded bg-red-950/60 border border-red-800 text-red-400 text-xs">
+              {errMsg}
             </div>
           )}
 
-          <div className="flex items-center space-x-3 pt-2">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition flex items-center justify-center space-x-1.5 disabled:opacity-50"
-            >
-              <Zap className="w-4 h-4" />
-              <span>
-                {isSubmitting ? 'Mutating Team...' : 'Trigger Admin API Update (Grouped)'}
-              </span>
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full py-2 rounded-lg bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs transition disabled:opacity-50 mt-1"
+          >
+            {isSubmitting ? 'Mutating document...' : 'Dispatch Admin Update (Grouped)'}
+          </button>
         </form>
 
-        {/* Requirement #7 Raw MongoDB Update Demonstration */}
-        <div className="mt-6 pt-5 border-t border-slate-800">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-300">
-              <Terminal className="w-4 h-4 text-emerald-400" />
-              <span>Direct MongoDB Update (mongosh / Atlas)</span>
-            </div>
+        {/* Raw DB update */}
+        <div className="mt-5 pt-4 border-t border-[#1c212c]">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs font-semibold text-zinc-300">
+              Direct Database Command (mongosh / Atlas)
+            </span>
             <button
               onClick={copyMongoScript}
-              className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 flex items-center space-x-1"
+              className="text-[11px] font-semibold text-zinc-400 hover:text-white"
             >
-              {copiedScript ? <Check className="w-3 h-3 text-emerald-400" /> : null}
-              <span>{copiedScript ? 'Copied!' : 'Copy Script'}</span>
+              {copiedScript ? 'Copied!' : 'Copy Code'}
             </button>
           </div>
-          <p className="text-[11px] text-slate-400 mb-2">
-            Running this script directly in <code className="text-amber-300">mongosh</code> or Atlas bypasses the API completely. The Change Stream watcher will still detect it and dispatch real-time notifications to subscribers!
-          </p>
-          <pre className="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-[11px] text-emerald-400 overflow-x-auto">
+          <pre className="bg-[#0b0d13] p-2.5 rounded-lg border border-[#1a1e28] font-mono text-[11px] text-emerald-400 overflow-x-auto">
             {rawMongoScript}
           </pre>
         </div>

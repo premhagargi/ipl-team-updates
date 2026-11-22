@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSocket } from '../context/SocketContext';
-import { X, CheckCheck, Bell, Clock } from 'lucide-react';
+import { X, CheckCheck, Bell } from 'lucide-react';
 
 interface NotificationsPanelProps {
   isOpen: boolean;
@@ -41,7 +41,7 @@ export const NotificationsPanel: React.FC<NotificationsPanelProps> = ({
       case 'homeGround':
         return 'Home Ground';
       case 'titles':
-        return 'IPL Titles';
+        return 'Titles';
       case 'wins':
         return 'Wins';
       case 'losses':
@@ -57,109 +57,92 @@ export const NotificationsPanel: React.FC<NotificationsPanelProps> = ({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Drawer */}
-      <div className="relative w-full max-w-md bg-[#0f172a] border-l border-slate-800 shadow-2xl flex flex-col h-full z-10">
+      <div className="relative w-full max-w-md bg-[#0f1118] border-l border-[#1f2430] flex flex-col h-full z-10">
         {/* Header */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
-              <Bell className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white leading-tight">
-                Notifications
-              </h2>
-              <p className="text-xs text-slate-400">
-                {unreadCount > 0
-                  ? `${unreadCount} unread update${unreadCount > 1 ? 's' : ''}`
-                  : 'All caught up'}
-              </p>
-            </div>
+        <div className="p-4 border-b border-[#1c212c] flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+              Alerts & Updates
+            </h2>
+            <p className="text-[11px] text-zinc-500">
+              {unreadCount > 0 ? `${unreadCount} unread update(s)` : 'All caught up'}
+            </p>
           </div>
 
           <div className="flex items-center space-x-2">
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition"
+                className="flex items-center space-x-1 px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 transition"
               >
                 <CheckCheck className="w-3.5 h-3.5 text-blue-400" />
-                <span>Mark all read</span>
+                <span>Mark Read</span>
               </button>
             )}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition"
+              className="p-1 rounded text-zinc-400 hover:text-white"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Notifications List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {/* List */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
           {notifications.length === 0 ? (
-            <div className="h-64 flex flex-col items-center justify-center text-center p-6 text-slate-400">
-              <div className="w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center mb-3">
-                <Bell className="w-6 h-6 text-slate-500" />
-              </div>
-              <p className="text-sm font-medium text-slate-300">No notifications yet</p>
-              <p className="text-xs text-slate-500 mt-1 max-w-xs">
-                Subscribe to your favorite teams below to receive instant real-time updates!
+            <div className="h-64 flex flex-col items-center justify-center text-center p-6 text-zinc-500">
+              <Bell className="w-6 h-6 text-zinc-600 mb-2" />
+              <p className="text-xs font-medium text-zinc-400">No alerts yet</p>
+              <p className="text-[11px] text-zinc-600 mt-1 max-w-xs">
+                Subscribe to franchises to receive instant real-time change stream updates.
               </p>
             </div>
           ) : (
             notifications.map((item) => (
               <div
                 key={item._id}
-                className={`p-4 rounded-xl border transition ${
+                className={`p-3 rounded-lg border transition ${
                   !item.read
-                    ? 'bg-blue-950/20 border-blue-500/40 shadow-sm'
-                    : 'bg-slate-900/40 border-slate-800/80'
+                    ? 'bg-[#151922] border-blue-600/50'
+                    : 'bg-[#10131a] border-[#1c212c]'
                 }`}
               >
-                <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center space-x-2">
-                    <span className="px-2 py-0.5 rounded font-black text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-zinc-800 text-zinc-200">
                       {item.teamId?.short || 'TEAM'}
                     </span>
-                    <span className="text-sm font-bold text-white truncate max-w-[190px]">
-                      {item.teamId?.name || 'IPL Team'}
+                    <span className="text-xs font-bold text-white truncate max-w-[190px]">
+                      {item.teamId?.name}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-1 text-[11px] text-slate-400">
-                    <Clock className="w-3 h-3 text-slate-500" />
-                    <span>{formatTime(item.createdAt)}</span>
-                  </div>
+                  <span className="text-[10px] text-zinc-500 font-medium">
+                    {formatTime(item.createdAt)}
+                  </span>
                 </div>
 
-                {/* Grouped Changes List */}
-                <div className="mt-2.5 space-y-1.5 bg-slate-950/60 rounded-lg p-2.5 border border-slate-800/60 text-xs">
+                {/* Changes List */}
+                <div className="space-y-1 bg-[#0b0d13] rounded p-2 text-xs border border-[#1a1e28]">
                   {item.changes.map((change, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between text-slate-300"
+                      className="flex items-center justify-between text-zinc-300"
                     >
-                      <span className="text-slate-400 font-medium">
+                      <span className="text-zinc-500 text-[11px]">
                         {getFieldLabel(change.field)}:
                       </span>
-                      <span className="font-semibold text-white bg-slate-800 px-2 py-0.5 rounded">
+                      <span className="font-semibold text-white">
                         {String(change.newValue)}
                       </span>
                     </div>
                   ))}
                 </div>
-
-                {!item.read && (
-                  <div className="mt-2 flex items-center space-x-1.5 text-[10px] text-blue-400 font-bold uppercase tracking-wider">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping" />
-                    <span>New Update</span>
-                  </div>
-                )}
               </div>
             ))
           )}
