@@ -1,12 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSocket } from '../context/SocketContext';
 
 export const LiveScorecard: React.FC = () => {
   const { liveMatch } = useSocket();
 
+  const [runBump, setRunBump] = useState(false);
+  const [wicketFlash, setWicketFlash] = useState(false);
+  const [recentBallFlash, setRecentBallFlash] = useState(false);
+
+  const prevRunsRef = useRef<number | undefined>(undefined);
+  const prevWicketsRef = useRef<number | undefined>(undefined);
+  const prevOversRef = useRef<string | undefined>(undefined);
+
+  // Trigger text effect when runs increase
+  useEffect(() => {
+    if (liveMatch && prevRunsRef.current !== undefined) {
+      if (liveMatch.runs > prevRunsRef.current) {
+        setRunBump(true);
+        const timer = setTimeout(() => setRunBump(false), 700);
+        return () => clearTimeout(timer);
+      }
+    }
+    prevRunsRef.current = liveMatch?.runs;
+  }, [liveMatch?.runs]);
+
+  // Trigger alert text effect when a wicket falls
+  useEffect(() => {
+    if (liveMatch && prevWicketsRef.current !== undefined) {
+      if (liveMatch.wickets > prevWicketsRef.current) {
+        setWicketFlash(true);
+        const timer = setTimeout(() => setWicketFlash(false), 1500);
+        return () => clearTimeout(timer);
+      }
+    }
+    prevWicketsRef.current = liveMatch?.wickets;
+  }, [liveMatch?.wickets]);
+
+  // Flash the ball pill on every delivery
+  useEffect(() => {
+    if (liveMatch && prevOversRef.current !== undefined) {
+      if (liveMatch.oversBowled !== prevOversRef.current) {
+        setRecentBallFlash(true);
+        const timer = setTimeout(() => setRecentBallFlash(false), 600);
+        return () => clearTimeout(timer);
+      }
+    }
+    prevOversRef.current = liveMatch?.oversBowled;
+  }, [liveMatch?.oversBowled]);
+
   if (!liveMatch) {
     return (
-      <div className="bg-[#12151c] rounded-xl p-5 border border-[#1f2430] text-center text-xs text-zinc-400">
+      <div className="bg-[#11141c] rounded-xl p-5 border border-[#1f2430] text-center text-xs text-zinc-400">
         Connecting to live scorecard broadcast stream...
       </div>
     );
@@ -26,15 +70,17 @@ export const LiveScorecard: React.FC = () => {
   const nonStriker = liveMatch.batters?.find((b) => !b.onStrike);
 
   return (
-    <div className="bg-[#11141c] rounded-xl border border-[#1f2430] p-4 sm:p-5 mb-8 shadow-sm">
+    <div className={`bg-[#11141c] rounded-xl border transition-colors duration-500 p-4 sm:p-5 mb-8 shadow-sm ${
+      wicketFlash ? 'border-red-600/80 bg-red-950/10' : 'border-[#1f2430]'
+    }`}>
       {/* Top Banner Header */}
       <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#1c212c]">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2.5">
           <span className="flex items-center space-x-1 px-2 py-0.5 rounded bg-red-600 text-white text-[10px] font-bold uppercase tracking-wider">
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
             <span>LIVE</span>
           </span>
-          <span className="text-xs font-semibold text-zinc-300">
+          <span className="text-xs font-bold text-zinc-200">
             {liveMatch.battingTeam} vs {liveMatch.bowlingTeam}
           </span>
         </div>
@@ -45,20 +91,51 @@ export const LiveScorecard: React.FC = () => {
 
       {/* Broadcast Score Strip */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-        {/* Main Score */}
+        {/* Main Score with dynamic text effects */}
         <div className="md:col-span-4">
           <div className="text-xs font-bold text-zinc-400 uppercase tracking-wide">
             {liveMatch.battingTeam}
           </div>
-          <div className="flex items-baseline space-x-2.5 my-1">
-            <span className="text-3xl sm:text-4xl font-black text-white tabular-nums tracking-tight">
-              {liveMatch.runs}
-              <span className="text-zinc-400 font-bold">/{liveMatch.wickets}</span>
-            </span>
+
+          <div className="flex items-baseline space-x-2.5 my-1.5">
+            {/* Runs & Wickets with animated pop/flash */}
+            <div className="flex items-baseline text-3xl sm:text-4xl font-black tabular-nums tracking-tight">
+              {/* Runs pop effect */}
+              <span
+                className={`inline-block transition-all duration-300 transform ${
+                  runBump
+                    ? 'text-emerald-400 scale-110 -translate-y-1 drop-shadow-[0_0_12px_rgba(52,211,153,0.5)]'
+                    : 'text-white scale-100'
+                }`}
+              >
+                {liveMatch.runs}
+              </span>
+
+              {/* Wickets flash effect */}
+              <span
+                className={`inline-block transition-all duration-300 transform ${
+                  wicketFlash
+                    ? 'text-red-500 scale-125 translate-x-1 font-black drop-shadow-[0_0_14px_rgba(239,68,68,0.7)]'
+                    : 'text-zinc-400 font-bold'
+                }`}
+              >
+                /{liveMatch.wickets}
+              </span>
+            </div>
+
+            {/* Overs count */}
             <span className="text-zinc-400 text-sm font-semibold tabular-nums">
               ({liveMatch.oversBowled}/{liveMatch.totalOvers || 20} ov)
             </span>
+
+            {/* Dynamic Wicket Alert Badge */}
+            {wicketFlash && (
+              <span className="animate-bounce px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-red-600 text-white shadow-lg">
+                Wicket!
+              </span>
+            )}
           </div>
+
           <div className="text-xs text-zinc-400 font-medium tabular-nums">
             Current Run Rate: <span className="text-zinc-200 font-bold">{currentRunRate}</span>
           </div>
@@ -113,6 +190,7 @@ export const LiveScorecard: React.FC = () => {
               <span className="text-xs text-zinc-600">Starting over...</span>
             ) : (
               liveMatch.currentOverBalls.map((ball, idx) => {
+                const isLastBall = idx === liveMatch.currentOverBalls.length - 1;
                 let badge = 'bg-zinc-800 text-zinc-300 border-zinc-700';
                 if (ball === '4') badge = 'bg-emerald-950 text-emerald-400 border-emerald-700 font-bold';
                 if (ball === '6') badge = 'bg-amber-950 text-amber-300 border-amber-700 font-bold';
@@ -122,7 +200,9 @@ export const LiveScorecard: React.FC = () => {
                 return (
                   <span
                     key={idx}
-                    className={`w-6 h-6 rounded flex items-center justify-center text-xs font-mono border tabular-nums ${badge}`}
+                    className={`w-6 h-6 rounded flex items-center justify-center text-xs font-mono border tabular-nums transition-all duration-300 ${
+                      isLastBall && recentBallFlash ? 'scale-125 ring-2 ring-white/60' : 'scale-100'
+                    } ${badge}`}
                   >
                     {ball === '0' ? '•' : ball}
                   </span>
